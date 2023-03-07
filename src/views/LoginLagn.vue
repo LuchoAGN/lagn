@@ -1,6 +1,6 @@
 <template>
   <div id="body_login">
-    <div windowLogin :class="istrue ? 'flip-scale-down-hor' : 'flip-scale-down-hor-2' ">
+    <div windowLogin :class="!isLogin  ? 'flip-scale-down-hor' : 'flip-scale-down-hor-2' ">
       <vs-card type="3" v-if="!isLogin">
         <template #title>
           <h3>Inicia sesión en LAGN</h3>
@@ -10,14 +10,29 @@
         </template>
         <template #text>
           <div inputsUser>
-            <vs-input v-model="nameUser" label="Ingrese Username" placeholder="userLagn">
-              <template v-if="!validEmail && nameUser !== ''" #message-danger>
+            <vs-input v-model="nameUser" icon-after label="Ingrese Username" placeholder="userLagn">
+              <template #icon>
+                <Icon icon="bx:user" width="20" height="20"/>
+              </template>
+              <template v-if="!validUser && nameUser !== ''" #message-danger>
                 Usuario Invalido
               </template>
             </vs-input>
-            <vs-input type="password" v-model="password" label="Ingrese Contraseña" placeholder="contraseña">
+            <vs-input 
+              type="password" 
+              v-model="password"
+              :visiblePassword="hasVisiblePassword"
+              icon-after 
+              label="Ingrese Contraseña" 
+              placeholder="contraseña"
+              @click-icon="hasVisiblePassword = !hasVisiblePassword"
+            >
+              <template #icon>
+                <Icon v-if="!hasVisiblePassword" icon="bx:show-alt"  width="20" height="20"/>
+                <Icon v-else icon="bx:hide"  width="20" height="20"/>
+              </template>
               <template v-if="!validPassword && password !== ''" #message-danger>
-                Tamaño de contraseña invalido
+                Contraseña invalido
               </template>
             </vs-input>
           </div>
@@ -37,48 +52,69 @@
       </vs-card>
       <vs-card type="3" v-if="isLogin">
         <template #title>
-          <h3>Registrate en LAGN</h3>
+          <div style="padding-left: 120px;">
+            <h3>Registrate en LAGN</h3>
+          </div>
         </template>
         <template #text>
           <div structRegister>
             <div inputsUser style="margin-right: 25px;">
-              <vs-input v-model="nameUser" label="Ingrese Username" placeholder="userLagn">
-                <template v-if="!validEmail && nameUser !== ''" #message-danger>
-                  Usuario Invalido
+              <vs-input v-model="dataUser.nameUser" label="Ingrese Username" placeholder="AndresP">
+                <template v-if="!validUsername && dataUser.nameUser !== ''" #message-danger>
+                  Debes tener mas de 6 caracteres
                 </template>
               </vs-input>
-              <vs-input type="password" v-model="password" label="Ingrese Contraseña" placeholder="contraseña">
-                <template v-if="!validPassword && password !== ''" #message-danger>
-                  Tamaño de contraseña invalido
+              <vs-input 
+                type="password" 
+                v-model="dataUser.password" 
+                label="Ingrese Contraseña" 
+                placeholder="contraseña"
+                :progress="getProgress"
+              >
+                <template v-if="getProgress >= 100" #message-success>
+                  Secure password
+                </template>
+                <template v-if="!validPass && dataUser.password !== ''" #message-danger>
+                  Debes tener mas de 8 caracteres
+                </template>
+              </vs-input>
+              <vs-input 
+                type="password" 
+                v-model="dataUser.password2" 
+                label="Repetir Contraseña" 
+                placeholder="contraseña"
+              >
+                <template v-if="!validPassEquals && dataUser.password2 !== ''" #message-danger>
+                  Debe coincidir las contraseñas
                 </template>
               </vs-input>
             </div>
             <div inputsUser>
-              <vs-input v-model="nameUser" label="Ingrese Username" placeholder="userLagn">
-                <template v-if="!validEmail && nameUser !== ''" #message-danger>
-                  Usuario Invalido
+              <vs-input v-model="dataUser.email" label="Ingrese Email" placeholder="andres@lagn.com">
+                <template v-if="!validEmail && dataUser.email !== ''" #message-danger>
+                  Correo electronico invalido
                 </template>
               </vs-input>
-              <vs-input type="password" v-model="password" label="Ingrese Contraseña" placeholder="contraseña">
-                <template v-if="!validPassword && password !== ''" #message-danger>
-                  Tamaño de contraseña invalido
+              <vs-input v-model="dataUser.phone" label="Ingrese Telefono" placeholder="3000001122">
+                <template v-if="!validPhone && dataUser.phone !== ''" #message-danger>
+                  Numero telefonico invalido
                 </template>
               </vs-input>
             </div>
           </div>
-          <div inputsUser style="margin-top: 10px;">
-            <vs-input v-model="nameUser" label="Ingrese Username" placeholder="userLagn">
-              <template v-if="!validEmail && nameUser !== ''" #message-danger>
-                Usuario Invalido
+          <div inputsUser style="margin-top: 10px; display: flex;">
+            <vs-input v-model="dataUser.name" label="Ingrese su nombre" placeholder="Andres" style="margin-right: 25px;">
+              <template v-if="!validName && dataUser.name !== ''" #message-danger>
+                Debes tener mas de 3 caracteres
               </template>
             </vs-input>
-            <vs-input type="password" v-model="password" label="Ingrese Contraseña" placeholder="contraseña">
-              <template v-if="!validPassword && password !== ''" #message-danger>
-                Tamaño de contraseña invalido
+            <vs-input v-model="dataUser.lastName" label="Ingrese su apellido" placeholder="Polo">
+              <template v-if="!validLastName && dataUser.lastName !== ''" #message-danger>
+                Debes tener mas de 3 caracteres
               </template>
             </vs-input>
           </div>
-          <div actionLogin>
+          <div actionRegister>
             <span>
               <a @click="istrue = true">
                 Ya tienes cuenta ?
@@ -96,22 +132,81 @@
   </div>
 </template>
 <script>
+
+import { Icon } from '@iconify/vue2';
+
 export default {
   name: "login-lagn",
+  components: {
+		Icon,
+	},
   data(){
     return{
+      hasVisiblePassword: false,
       nameUser: '',
       password: '',
+      dataUser: {
+        nameUser: '',
+        password: '',
+        password2: '',
+        email: '',
+        phone: '',
+        name: '',
+        lastName: ''
+      },
       isLogin: false,
       istrue: false
     }
   },
   computed: {
-    validEmail() {
+    validUser() {
       return this.nameUser.length > 6 ? true : false
     },
     validPassword(){
       return this.password.length > 8 ? true : false
+    },
+    validUsername(){
+      return this.dataUser.nameUser.length > 6 ? true : false
+    },
+    validPass(){
+      return this.dataUser.password.length > 8 ? true : false
+    },
+    validPassEquals(){
+      return this.dataUser.password == this.dataUser.password2
+    },
+    validEmail(){
+      // eslint-disable-next-line 
+      return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(this.dataUser.email)
+    },
+    validPhone(){
+      return this.dataUser.phone.length > 8 ? true : false
+    },
+    validName(){
+      return this.dataUser.name.length >= 3 ? true : false
+    },
+    validLastName(){
+      return this.dataUser.lastName.length >= 3 ? true : false
+    },
+    getProgress() {
+      let progress = 0
+
+      if (/\d/.test(this.dataUser.password)) {
+        progress += 20
+      }
+      if (/(.*[A-Z].*)/.test(this.dataUser.password)) {
+        progress += 20
+      }
+      if (/(.*[a-z].*)/.test(this.dataUser.password)) {
+        progress += 20
+      }
+      if (this.dataUser.password.length >= 8) {
+        progress += 20
+      }
+      if (/[^A-Za-z0-9]/.test(this.dataUser.password)) {
+        progress += 20
+      }
+
+      return progress
     }
   },
   mounted(){
@@ -188,10 +283,11 @@ export default {
   }
 
   div[windowLogin] div.vs-card__text{
-    width: inherit!important;
+    width: inherit !important;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    flex-wrap: wrap;
+    align-content: center;
   }
 
   div[inputsUser]{
@@ -299,5 +395,22 @@ export default {
     flex-direction: row;
   }
 
+  .flip-scale-down-hor-2 .vs-card__text{
+    align-items: flex-start!important;
+  }
 
+  div[windowLogin] div[actionRegister]{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding-left: 100px;
+  }
+
+  div[windowLogin] div[actionRegister] button{
+    margin-left: 65px;
+  }
+
+  div[windowLogin] div[actionRegister] span a{
+    cursor: pointer;
+  }
 </style>
