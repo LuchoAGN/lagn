@@ -120,7 +120,7 @@
                 Ya tienes cuenta ?
               </a>
             </span>
-            <vs-button>
+            <vs-button @click="registerUser()">
               <span class="span">
                 Sign up
               </span>
@@ -133,6 +133,7 @@
 </template>
 <script>
 
+import api from '../api/index'
 import { Icon } from '@iconify/vue2';
 
 export default {
@@ -213,6 +214,48 @@ export default {
     this.bubbler();
   },
   methods:{
+    login: async function(){
+      if(this.validUser && this.validPassword)
+      {
+        var obj = {
+          "parameter":{
+            "data": {
+              "username": this.nameUser,
+              "password": this.password
+            }
+          }
+        }
+        console.log(obj)
+        await api
+        .request("post", "/login", obj)
+        .then((response) => {
+          console.log(response)
+        })
+        .catch(function () {
+          self.notiFail = true;
+        });
+      }
+    },
+    registerUser: async function(){
+      if(this.validUsername && this.validPass && this.validPassEquals && this.validEmail && 
+        this.validPhone && this.validName && this.validLastName)
+      {
+        var obj = {
+          "parameter":{
+            "data": this.dataUser
+          }
+        }
+        console.log(obj)
+        await api
+        .request("post", "/signup", obj)
+        .then((response) => {
+          console.log(response)
+        })
+        .catch(function () {
+          self.notiFail = true;
+        });
+      }
+    },
     randomNumber(start, end){
       return Math.random() * (end - start);
     },
