@@ -42,7 +42,7 @@
                 Registrate!
               </a>
             </span>
-            <vs-button>
+            <vs-button @click="login()">
               <span class="span">
                 Login
               </span>
@@ -59,8 +59,8 @@
         <template #text>
           <div structRegister>
             <div inputsUser style="margin-right: 25px;">
-              <vs-input v-model="dataUser.nameUser" label="Ingrese Username" placeholder="AndresP">
-                <template v-if="!validUsername && dataUser.nameUser !== ''" #message-danger>
+              <vs-input v-model="dataUser.username" label="Ingrese Username" placeholder="AndresP">
+                <template v-if="!validUsername && dataUser.username !== ''" #message-danger>
                   Debes tener mas de 6 caracteres
                 </template>
               </vs-input>
@@ -95,21 +95,21 @@
                   Correo electronico invalido
                 </template>
               </vs-input>
-              <vs-input v-model="dataUser.phone" label="Ingrese Telefono" placeholder="3000001122">
-                <template v-if="!validPhone && dataUser.phone !== ''" #message-danger>
+              <vs-input v-model="dataUser.phone_number" label="Ingrese Telefono" placeholder="3000001122">
+                <template v-if="!validPhone && dataUser.phone_number !== ''" #message-danger>
                   Numero telefonico invalido
                 </template>
               </vs-input>
             </div>
           </div>
           <div inputsUser style="margin-top: 10px; display: flex;">
-            <vs-input v-model="dataUser.name" label="Ingrese su nombre" placeholder="Andres" style="margin-right: 25px;">
-              <template v-if="!validName && dataUser.name !== ''" #message-danger>
+            <vs-input v-model="dataUser.first_name" label="Ingrese su nombre" placeholder="Andres" style="margin-right: 25px;">
+              <template v-if="!validName && dataUser.first_name !== ''" #message-danger>
                 Debes tener mas de 3 caracteres
               </template>
             </vs-input>
-            <vs-input v-model="dataUser.lastName" label="Ingrese su apellido" placeholder="Polo">
-              <template v-if="!validLastName && dataUser.lastName !== ''" #message-danger>
+            <vs-input v-model="dataUser.last_name" label="Ingrese su apellido" placeholder="Polo">
+              <template v-if="!validLastName && dataUser.last_name !== ''" #message-danger>
                 Debes tener mas de 3 caracteres
               </template>
             </vs-input>
@@ -147,13 +147,13 @@ export default {
       nameUser: '',
       password: '',
       dataUser: {
-        nameUser: '',
+        username: '',
         password: '',
         password2: '',
         email: '',
-        phone: '',
-        name: '',
-        lastName: ''
+        phone_number: '',
+        first_name: '',
+        last_name: ''
       },
       isLogin: false,
       istrue: false
@@ -167,7 +167,7 @@ export default {
       return this.password.length > 8 ? true : false
     },
     validUsername(){
-      return this.dataUser.nameUser.length > 6 ? true : false
+      return this.dataUser.username.length > 6 ? true : false
     },
     validPass(){
       return this.dataUser.password.length > 8 ? true : false
@@ -180,13 +180,13 @@ export default {
       return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(this.dataUser.email)
     },
     validPhone(){
-      return this.dataUser.phone.length > 8 ? true : false
+      return this.dataUser.phone_number.length > 8 ? true : false
     },
     validName(){
-      return this.dataUser.name.length >= 3 ? true : false
+      return this.dataUser.first_name.length >= 3 ? true : false
     },
     validLastName(){
-      return this.dataUser.lastName.length >= 3 ? true : false
+      return this.dataUser.last_name.length >= 3 ? true : false
     },
     getProgress() {
       let progress = 0
@@ -215,6 +215,9 @@ export default {
   },
   methods:{
     login: async function(){
+      
+      var infoperson = null
+
       if(this.validUser && this.validPassword)
       {
         var obj = {
@@ -225,15 +228,21 @@ export default {
             }
           }
         }
-        console.log(obj)
+
         await api
         .request("post", "/login", obj)
         .then((response) => {
-          console.log(response)
+          infoperson = {
+            user: response.data.result_extra,
+            token: response.data.result.access_token
+          }
         })
-        .catch(function () {
-          self.notiFail = true;
-        });
+        
+        if(infoperson != null){
+          window.localStorage.setItem("dataProfile_lagn", JSON.stringify(infoperson));
+          this.$router.push("/");
+          window.location.reload();
+        }
       }
     },
     registerUser: async function(){
@@ -245,7 +254,7 @@ export default {
             "data": this.dataUser
           }
         }
-        console.log(obj)
+
         await api
         .request("post", "/signup", obj)
         .then((response) => {

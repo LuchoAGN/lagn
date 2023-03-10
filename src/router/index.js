@@ -14,7 +14,7 @@ const guest = (to, from, next) => {
 }
 
 const auth = (to, from, next) => {
-  if (localStorage.getItem('user')) {
+  if (localStorage.getItem('dataProfile_lagn')) {
     return next()
   } else {
     return next('/login')

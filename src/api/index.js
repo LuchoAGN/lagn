@@ -1,5 +1,5 @@
 import axios from 'axios'
-var serverURI = 'https://corral-api.hygprueba.com/api'
+var serverURI = 'https://api-channel-lagn.app.luisgarcia.com.co/api'
 
 export default {
     request(method, uri, data = null) {
